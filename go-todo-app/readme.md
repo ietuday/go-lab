@@ -356,3 +356,145 @@ tasks = append(tasks[:1], tasks[2:]...)
 ### **Why `...` (Variadic Operator)?**
 - `append()` expects individual elements, not a slice.
 - `tasks[index+1:]...` spreads the slice into individual elements, allowing `append()` to merge them properly.
+
+Now, let's improve our **CLI To-Do App** by adding **input validation** and **error handling** to prevent invalid inputs.
+
+---
+
+## **Feature: Input Validation & Error Handling**
+### **1. Validate Task Name (Prevent Empty Input)**
+Modify `addTask()` to ensure users enter a **non-empty** task name:
+
+#### **Updated `addTask()`**
+```go
+func addTask() {
+	fmt.Print("Enter task name: ")
+	var name string
+	fmt.Scanln(&name)
+
+	if name == "" {
+		fmt.Println("Error: Task name cannot be empty!")
+		return
+	}
+
+	task := Task{ID: len(tasks) + 1, Name: name, Done: false}
+	tasks = append(tasks, task)
+	saveTasks()
+	fmt.Println("Task added successfully!")
+}
+```
+✅ **Prevents users from adding empty tasks.**
+
+---
+
+### **2. Validate Task ID Input (Ensure It's a Number)**
+Modify `markDone()` and `deleteTask()` to check if users enter a **valid integer**.
+
+#### **Updated `markDone()`**
+```go
+func markDone() {
+	fmt.Print("Enter task ID to mark as done: ")
+	var id int
+	_, err := fmt.Scanln(&id) // Validate input
+
+	if err != nil {
+		fmt.Println("Error: Invalid task ID!")
+		return
+	}
+
+	for i, task := range tasks {
+		if task.ID == id {
+			tasks[i].Done = true
+			saveTasks()
+			fmt.Println("Task marked as done!")
+			return
+		}
+	}
+	fmt.Println("Error: Task not found!")
+}
+```
+
+#### **Updated `deleteTask()`**
+```go
+func deleteTask() {
+	fmt.Print("Enter task ID to delete: ")
+	var id int
+	_, err := fmt.Scanln(&id) // Validate input
+
+	if err != nil {
+		fmt.Println("Error: Invalid task ID!")
+		return
+	}
+
+	index := -1
+	for i, task := range tasks {
+		if task.ID == id {
+			index = i
+			break
+		}
+	}
+
+	if index == -1 {
+		fmt.Println("Error: Task not found!")
+		return
+	}
+
+	tasks = append(tasks[:index], tasks[index+1:]...)
+	saveTasks()
+	fmt.Println("Task deleted successfully!")
+}
+```
+✅ **Prevents users from entering non-numeric values.**  
+✅ **Shows an error if the task ID doesn’t exist.**
+
+---
+
+### **3. Handle Errors When Loading Tasks**
+Modify `loadTasks()` to handle file errors **gracefully**.
+
+#### **Updated `loadTasks()`**
+```go
+func loadTasks() {
+	file, err := os.ReadFile(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Println("No existing tasks found. Starting fresh!")
+			return
+		}
+		fmt.Println("Error loading tasks:", err)
+		return
+	}
+
+	err = json.Unmarshal(file, &tasks)
+	if err != nil {
+		fmt.Println("Error parsing tasks file:", err)
+	}
+}
+```
+✅ **Handles missing or corrupt `tasks.json` files.**  
+
+---
+
+## **Run the Program**
+```sh
+$ go run main.go
+
+1. Add Task
+2. List Tasks
+3. Mark Done
+4. Delete Task
+5. Exit
+Choose an option: 1
+Enter task name:  
+Error: Task name cannot be empty!
+
+Choose an option: 3
+Enter task ID to mark as done: xyz
+Error: Invalid task ID!
+
+Choose an option: 4
+Enter task ID to delete: 5
+Error: Task not found!
+```
+
+---
