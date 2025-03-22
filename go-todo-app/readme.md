@@ -225,3 +225,134 @@ Exiting...
 - The program saves tasks in `tasks.json`, so when restarted, tasks are not lost.
 
 ---
+
+Let's improve the **CLI To-Do App** by adding a **"Delete Task"** option.  
+
+---
+
+## **Feature: Delete a Task**
+This feature will allow users to remove a task from the list.
+
+### **1. Update the Main Menu**
+Modify the `main()` function to include a new option:  
+```go
+func main() {
+	loadTasks() // Load existing tasks
+
+	for {
+		fmt.Println("\n1. Add Task\n2. List Tasks\n3. Mark Done\n4. Delete Task\n5. Exit")
+		fmt.Print("Choose an option: ")
+		var choice int
+		fmt.Scanln(&choice)
+
+		switch choice {
+		case 1:
+			addTask()
+		case 2:
+			listTasks()
+		case 3:
+			markDone()
+		case 4:
+			deleteTask() // New function to delete a task
+		case 5:
+			saveTasks()
+			fmt.Println("Exiting...")
+			return
+		default:
+			fmt.Println("Invalid option, try again!")
+		}
+	}
+}
+```
+
+---
+
+### **2. Implement `deleteTask()`**
+Add the following function to remove a task:
+```go
+func deleteTask() {
+	fmt.Print("Enter task ID to delete: ")
+	var id int
+	fmt.Scanln(&id)
+
+	index := -1
+	for i, task := range tasks {
+		if task.ID == id {
+			index = i
+			break
+		}
+	}
+
+	if index == -1 {
+		fmt.Println("Task not found!")
+		return
+	}
+
+	// Remove task from slice
+	tasks = append(tasks[:index], tasks[index+1:]...)
+	saveTasks()
+	fmt.Println("Task deleted successfully!")
+}
+```
+### **Explanation**
+- **Prompts user** for the task ID.
+- **Finds the task** in the slice (`tasks`).
+- **If found**, removes it from the slice using `append()`.
+- **Calls `saveTasks()`** to update the JSON file.
+
+---
+
+## **Run the Program**
+```sh
+$ go run main.go
+
+1. Add Task
+2. List Tasks
+3. Mark Done
+4. Delete Task
+5. Exit
+Choose an option: 4
+Enter task ID to delete: 1
+Task deleted successfully!
+```
+This line is used to **remove an element from a slice** in Go:
+
+```go
+tasks = append(tasks[:index], tasks[index+1:]...)
+```
+
+### **Breakdown**
+- `tasks[:index]` → Creates a new slice **containing elements before** the task to be deleted.
+- `tasks[index+1:]` → Creates a new slice **containing elements after** the task to be deleted.
+- `append(tasks[:index], tasks[index+1:]...)` → Merges the two slices, effectively removing the element at `index`.
+
+---
+
+### **Example**
+#### **Before Deletion**
+```go
+tasks := []string{"Task 1", "Task 2", "Task 3", "Task 4"}
+```
+Let's say we want to delete `"Task 2"` (index `1`).
+
+#### **Slice Operations**
+```go
+tasks[:1]       // ["Task 1"]
+tasks[2:]       // ["Task 3", "Task 4"]
+```
+
+#### **Final Result**
+```go
+tasks = append(tasks[:1], tasks[2:]...)
+// Equivalent to: tasks = append(["Task 1"], ["Task 3", "Task 4"]...)
+```
+**New slice after deletion:**
+```go
+["Task 1", "Task 3", "Task 4"]
+```
+
+---
+
+### **Why `...` (Variadic Operator)?**
+- `append()` expects individual elements, not a slice.
+- `tasks[index+1:]...` spreads the slice into individual elements, allowing `append()` to merge them properly.

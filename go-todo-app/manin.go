@@ -16,9 +16,10 @@ var tasks []Task
 var filename = "tasks.json"
 
 func main() {
-	loadTasks()
+	loadTasks() // Load existing tasks
+
 	for {
-		fmt.Println("\n1. Add Task\n2. List Tasks\n3. Mark Done\n4. Exit")
+		fmt.Println("\n1. Add Task\n2. List Tasks\n3. Mark Done\n4. Delete Task\n5. Exit")
 		fmt.Print("Choose an option: ")
 		var choice int
 		fmt.Scanln(&choice)
@@ -31,6 +32,8 @@ func main() {
 		case 3:
 			markDone()
 		case 4:
+			deleteTask() // New function to delete a task
+		case 5:
 			saveTasks()
 			fmt.Println("Exiting...")
 			return
@@ -88,4 +91,28 @@ func loadTasks() {
 func saveTasks() {
 	data, _ := json.Marshal(tasks)
 	os.WriteFile(filename, data, 0644)
+}
+
+func deleteTask() {
+	fmt.Print("Enter task ID to delete: ")
+	var id int
+	fmt.Scanln(&id)
+
+	index := -1
+	for i, task := range tasks {
+		if task.ID == id {
+			index = i
+			break
+		}
+	}
+
+	if index == -1 {
+		fmt.Println("Task not found!")
+		return
+	}
+
+	// Remove task from slice
+	tasks = append(tasks[:index], tasks[index+1:]...)
+	saveTasks()
+	fmt.Println("Task deleted successfully!")
 }
